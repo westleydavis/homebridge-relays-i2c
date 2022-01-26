@@ -41,7 +41,7 @@ The raspberry pi can then control the state of the relays.
     {
       "accessory": "Relay",
       "name": "South",
-      "address": "0x02"
+      "address": "0x02",
       "invert": false,
       "initial_state": 0,
       "timeout_ms": -1

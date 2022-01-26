@@ -1,33 +1,33 @@
 {
-    "name": "homebridge-relays-i2c",
-    "version": "0.2.0",
-    "description": "i2c Raspberry Pi relay plugin for homebridge",
-    "license": "MIT",
-    "keywords": [
-        "homebridge-plugin",
-        "relay",
-        "homebridge",
-        "homebridge-relays-i2c"
-    ],
-    "engines": {
-        "node": ">=8.15.0",
-        "homebridge": ">=0.4.45"
-    },
-    "author": "Westley Davis",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/westleydavis/homebridge-relays-i2c.git"
-    },
-    "dependencies": {
-        "rpio": "^2.4.2"
-    },
-    "bugs": {
-        "url": "https://github.com/westleydavis/homebridge-relays-i2c/issues"
-    },
-    "homepage": "https://github.com/westleydavis/homebridge-relays-i2c#readme",
-    "main": "index.js",
-    "devDependencies": {},
-    "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
-    }
+  "name": "homebridge-relays-i2c",
+  "version": "0.2.1",
+  "description": "i2c Raspberry Pi relay plugin for homebridge",
+  "license": "MIT",
+  "keywords": [
+    "homebridge-plugin",
+    "relay",
+    "homebridge",
+    "homebridge-relays-i2c"
+  ],
+  "engines": {
+    "node": ">=8.15.0",
+    "homebridge": ">=0.4.45"
+  },
+  "author": "Westley Davis",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/westleydavis/homebridge-relays-i2c.git"
+  },
+  "dependencies": {
+    "raspi-i2c": "^5.4.2"
+  },
+  "bugs": {
+    "url": "https://github.com/westleydavis/homebridge-relays-i2c/issues"
+  },
+  "homepage": "https://github.com/westleydavis/homebridge-relays-i2c#readme",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }

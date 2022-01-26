@@ -9,7 +9,7 @@
 
 //var rpio = require('rpio');
 let Service, Characteristic;
-var i2c = require('i2c');
+var i2c = require('raspi-i2c');
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
