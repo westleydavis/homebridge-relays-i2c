@@ -2,18 +2,19 @@
  * Script file: index.js
  * Created on: Feb 28, 2018
  * Last modified on: Mar 31, 2021
- * 
+ *
  * Comments:
  *  Raspberry Pi relay controller homebridge plugin
  */
 
-var rpio = require('rpio');
+//var rpio = require('rpio');
 let Service, Characteristic;
+var i2c = require('i2c');
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-relays", "Relay", RelayAccessory);
+    homebridge.registerAccessory("homebridge-relays-i2c", "Relay", RelayAccessory);
 }
 
 class RelayAccessory {
@@ -23,7 +24,10 @@ class RelayAccessory {
 
         /* read configuration */
         this.name = config.name;
-        this.pin = config.pin;
+        //this.pin = config.pin;
+        this.i2cAddress = parseInt(config.i2cAddress);
+        this.i2cRegister = parseInt(config.i2cRegister);
+        this.i2cDevice = config.i2cDevice || '/dev/i2c-1';
         this.invert = config.invert || false;
         this.initialState = config.initial_state || 0;
         this.timeout = config.timeout_ms || 0;
@@ -32,7 +36,15 @@ class RelayAccessory {
         this.timerId = -1;
 
         /* GPIO initialization */
-        rpio.open(this.pin, rpio.OUTPUT, this.gpioValue(this.initialState));
+        //rpio.open(this.pin, rpio.OUTPUT, this.gpioValue(this.initialState));
+
+        this.cache = {
+        'state': false
+        };
+
+        this.wire = new i2c(this.i2cAddress, {
+            device: this.i2cDevice
+        });
 
         /* run service */
         this.relayService = new Service.Switch(this.name);
@@ -52,8 +64,8 @@ class RelayAccessory {
 
     getRelayState() {
         /* get relay state (ON, OFF) */
-        var val = this.gpioValue(rpio.read(this.pin) > 0);
-        return val == rpio.HIGH;
+        var val = this.cache.state;
+        return val;
     }
 
     setRelayState(value) {
@@ -64,14 +76,22 @@ class RelayAccessory {
         }
 
         /* GPIO write operation */
-        this.log.debug("Pin %d status: %s", this.pin, value);
-        rpio.write(this.pin, this.gpioValue(value));
-
+        this.log.debug("Adress %d status: %s", this.i2cAddress, value);
+        //rpio.write(this.pin, this.gpioValue(value));
+        if (value != 0) {
+          this.wire.writeBytes(i2cAddress,i2cRegister,0xFF);
+          this.cache.state = 1;
+        } else {
+          this.wire.writeBytes(i2cAddress,i2cRegister,0x00);
+          this.cache.state = 0;
+        }
         /* turn off the relay if timeout is expired */
         if (value && this.timeout > 0) {
             this.timerId = setTimeout(() => {
                 this.log.debug("Pin %d timed out. Turned off", this.pin);
-                rpio.write(this.pin, this.gpioValue(false));
+                this.cache.state = 0;
+                //rpio.write(this.pin, this.gpioValue(false));
+                this.wire.writeBytes(i2cAddress,i2cRegister,0x00);
                 this.timerId = -1;
 
                 /* update relay status */
@@ -85,8 +105,10 @@ class RelayAccessory {
     getServices() {
         this.informationService = new Service.AccessoryInformation();
         this.informationService
-            .setCharacteristic(Characteristic.Manufacturer, 'Smart Technology')
-            .setCharacteristic(Characteristic.Model, 'Multi-Relay Controller');
+            //.setCharacteristic(Characteristic.Manufacturer, 'Smart Technology')
+            .setCharacteristic(Characteristic.Manufacturer, 'Westley Davis')
+            //.setCharacteristic(Characteristic.Model, 'Multi-Relay Controller');
+            .setCharacteristic(Characteristic.Model, 'I2C Multi-Relay Controller');
 
         /* relay control */
         this.relayService
