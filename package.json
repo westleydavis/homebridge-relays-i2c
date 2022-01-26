@@ -19,7 +19,7 @@
     "url": "git://github.com/westleydavis/homebridge-relays-i2c.git"
   },
   "dependencies": {
-    "raspi-i2c": "^5.4.2"
+    "i2c": "^0.2.5"
   },
   "bugs": {
     "url": "https://github.com/westleydavis/homebridge-relays-i2c/issues"
