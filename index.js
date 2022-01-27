@@ -16,18 +16,23 @@ const I2C = require('raspi-i2c').I2C;
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-relays-i2c", "Relay", Relayi2cAccessory);
+    homebridge.registerAccessory("homebridge-relays-i2c", "i2cRelay", Relayi2cAccessory);
     //const test = new Relayi2cAccessory();
+
 };
 
 class Relayi2cAccessory {
-    constructor(log, config) {
+    constructor(log, config, api) {
+    //function Relayi2cAccessory(log,config,api){
         /* log instance */
         this.log = log;
-
+        this.config = config;
+        this.homebridge = api;
         /* read configuration */
-        this.log.debug(this.name);
+
+
         this.name = config.name;
+
         //this.pin = config.pin;
 
         this.log.debug(config.i2cAddress);
@@ -54,11 +59,12 @@ class Relayi2cAccessory {
 
         /* run service */
         this.relayService = new Service.Switch(this.name);
+        this.log("Created Accessory", config.name);
         //callback();
     };
 
     identify(callback) {
-        this.log.debug("Accessory identified");
+        this.log("Accessory identified");
         callback(null);
     };
 
@@ -87,19 +93,19 @@ class Relayi2cAccessory {
         //rpio.write(this.pin, this.gpioValue(value));
         var cb = null;
         if (value != 0) {
-          this.wire.writeByte(i2cAddress,i2cRegister,0xFF,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0xFF,cb);
           this.cache.state = 1;
         } else {
-          this.wire.writeByte(i2cAddress,i2cRegister,0x00,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
           this.cache.state = 0;
         }
         /* turn off the relay if timeout is expired */
         if (value && this.timeout > 0) {
             this.timerId = setTimeout(() => {
-                this.log.debug("Pin %d timed out. Turned off", this.pin);
+                this.log("Pin %d timed out. Turned off", this.pin);
                 this.cache.state = 0;
                 //rpio.write(this.pin, this.gpioValue(false));
-                this.wire.writeByte(i2cAddress,i2cRegister,0x00,cb);
+                this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
                 this.timerId = -1;
 
                 /* update relay status */

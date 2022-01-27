@@ -1,6 +1,6 @@
 {
   "name": "homebridge-relays-i2c",
-  "version": "0.2.26",
+  "version": "0.3.0",
   "description": "i2c Raspberry Pi relay plugin for homebridge",
   "license": "MIT",
   "keywords": [
