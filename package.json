@@ -1,6 +1,6 @@
 {
   "name": "homebridge-relays-i2c",
-  "version": "0.2.1",
+  "version": "0.2.26",
   "description": "i2c Raspberry Pi relay plugin for homebridge",
   "license": "MIT",
   "keywords": [
@@ -19,7 +19,7 @@
     "url": "git://github.com/westleydavis/homebridge-relays-i2c.git"
   },
   "dependencies": {
-    "i2c": "^0.2.5"
+    "raspi-i2c": "^6.2.4"
   },
   "bugs": {
     "url": "https://github.com/westleydavis/homebridge-relays-i2c/issues"

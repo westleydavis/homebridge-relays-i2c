@@ -9,22 +9,28 @@
 
 //var rpio = require('rpio');
 let Service, Characteristic;
-var i2c = require('i2c');
+const raspi = require('raspi');
+const I2C = require('raspi-i2c').I2C;
+
 
 module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
-    homebridge.registerAccessory("homebridge-relays-i2c", "Relay", RelayAccessory);
-}
+    homebridge.registerAccessory("homebridge-relays-i2c", "Relay", Relayi2cAccessory);
+    //const test = new Relayi2cAccessory();
+};
 
-class RelayAccessory {
+class Relayi2cAccessory {
     constructor(log, config) {
         /* log instance */
         this.log = log;
 
         /* read configuration */
+        this.log.debug(this.name);
         this.name = config.name;
         //this.pin = config.pin;
+
+        this.log.debug(config.i2cAddress);
         this.i2cAddress = parseInt(config.i2cAddress);
         this.i2cRegister = parseInt(config.i2cRegister);
         this.i2cDevice = config.i2cDevice || '/dev/i2c-1';
@@ -42,31 +48,32 @@ class RelayAccessory {
         'state': false
         };
 
-        this.wire = new i2c(this.i2cAddress, {
+        this.wire = new I2C(this.i2cAddress, {
             device: this.i2cDevice
         });
 
         /* run service */
         this.relayService = new Service.Switch(this.name);
-    }
+        //callback();
+    };
 
     identify(callback) {
         this.log.debug("Accessory identified");
         callback(null);
-    }
+    };
 
-    gpioValue(val) {
-        if (this.invert) {
-            val = !val;
-        }
-        return val ? rpio.HIGH : rpio.LOW;
-    }
+    //gpioValue(val) {
+      //  if (this.invert) {
+      //      val = !val;
+      //  }
+      //  return val ? rpio.HIGH : rpio.LOW;
+  //  };
 
     getRelayState() {
         /* get relay state (ON, OFF) */
         var val = this.cache.state;
         return val;
-    }
+    };
 
     setRelayState(value) {
         /* clear timeout if already exists */
@@ -78,11 +85,12 @@ class RelayAccessory {
         /* GPIO write operation */
         this.log.debug("Adress %d status: %s", this.i2cAddress, value);
         //rpio.write(this.pin, this.gpioValue(value));
+        var cb = null;
         if (value != 0) {
-          this.wire.writeBytes(i2cAddress,i2cRegister,0xFF);
+          this.wire.writeByte(i2cAddress,i2cRegister,0xFF,cb);
           this.cache.state = 1;
         } else {
-          this.wire.writeBytes(i2cAddress,i2cRegister,0x00);
+          this.wire.writeByte(i2cAddress,i2cRegister,0x00,cb);
           this.cache.state = 0;
         }
         /* turn off the relay if timeout is expired */
@@ -91,7 +99,7 @@ class RelayAccessory {
                 this.log.debug("Pin %d timed out. Turned off", this.pin);
                 this.cache.state = 0;
                 //rpio.write(this.pin, this.gpioValue(false));
-                this.wire.writeBytes(i2cAddress,i2cRegister,0x00);
+                this.wire.writeByte(i2cAddress,i2cRegister,0x00,cb);
                 this.timerId = -1;
 
                 /* update relay status */
@@ -100,7 +108,7 @@ class RelayAccessory {
                     .updateValue(false);
             }, this.timeout);
         }
-    }
+    };
 
     getServices() {
         this.informationService = new Service.AccessoryInformation();
@@ -124,5 +132,5 @@ class RelayAccessory {
             });
 
         return [this.informationService, this.relayService];
-    }
-}
+    };
+};
