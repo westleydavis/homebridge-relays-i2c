@@ -36,7 +36,7 @@ class Relayi2cAccessory {
         this.i2cDevice = config.i2cDevice || '/dev/i2c-1';
         this.invert = config.invert || false;
         this.initialState = config.initial_state || 0;
-        this.timeout = config.timeout_ms || 0;
+        this.timeout = config.timeout_ms*1000 || 0;
 
         /* initialize variables */
         this.timerId = -1;
@@ -54,7 +54,7 @@ class Relayi2cAccessory {
 
         /* run service */
         this.relayService = new Service.Switch(this.name);
-        //callback();
+        callback();
     };
 
     identify(callback) {
@@ -96,7 +96,7 @@ class Relayi2cAccessory {
         /* turn off the relay if timeout is expired */
         if (value && this.timeout > 0) {
             this.timerId = setTimeout(() => {
-                this.log.debug("Pin %d timed out. Turned off", this.pin);
+                this.log.debug("Pin %s timed out. Turned off", this.name);
                 this.cache.state = 0;
                 //rpio.write(this.pin, this.gpioValue(false));
                 this.wire.writeByte(i2cAddress,i2cRegister,0x00,cb);
