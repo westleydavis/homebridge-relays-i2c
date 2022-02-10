@@ -13,7 +13,11 @@ const raspi = require('raspi');
 const I2C = require('raspi-i2c').I2C;
 
 
-module.exports = function(homebridge) {
+module.exports = (api) => {
+  api.registerPlatform('homebridge-relays-i2c', Relayi2cAccessory)
+}
+
+/* module.exports = function(homebridge) {
     Service = homebridge.hap.Service;
     Characteristic = homebridge.hap.Characteristic;
     homebridge.registerAccessory("homebridge-relays-i2c", "i2cRelay", Relayi2cAccessory);
@@ -21,27 +25,40 @@ module.exports = function(homebridge) {
     //const test = new Relayi2cAccessory();
 
 };
+*/
 
 class Relayi2cAccessory {
-    constructor(log, config) {
+    constructor(log, config, api) {
+      this.accessories = [];
+      api.on('didFinishLaunching', () => {
+        const uuid = api.hap.uuid.generate('Something Unique000');
+        if (!this.accessories.find(accessory => accessory.UUID === uuid)){
+          const accessory = new this.api.platformAccessory('Display Name', uuid);
+          api.registerPlatformAccessories('homebridge-relays-i2c-plugin', 'homebridge-relays-i2c', [accessory]);
+        }
+      });
+
     //function Relayi2cAccessory(log,config,api){
         /* log instance */
-        this.log = log;
+        //this.log = log;
         this.log = log;
         this.config = config;
+        this.api = api;
+        this.Service = this.api.hap.Service;
+        this.Characteristic = api.hap.Characteristic;
         //this.homebridge = api;
         /* read configuration */
 
 
-        this.name1 = config.name;
-        this.name2 = config.name2;
+        this.name = config.name;
+        //this.name2 = config.name2;
 
         //this.pin = config.pin;
 
         this.log.debug(config.i2cAddress);
         this.i2cAddress = parseInt(config.i2cAddress);
-        this.i2cRegister1 = parseInt(config.i2cRegister1);
-        this.i2cRegister2 = parseInt(config.i2cRegister2);
+        this.i2cRegister = parseInt(config.i2cRegister);
+        //this.i2cRegister2 = parseInt(config.i2cRegister2);
         this.i2cDevice = config.i2cDevice || '/dev/i2c-1';
         this.invert = config.invert || false;
         this.initialState = config.initial_state || 0;
@@ -62,13 +79,17 @@ class Relayi2cAccessory {
         });
 
         /* run service */
-        this.relayService1 = new Service.Switch(this.name1);
-        this.relayService2 = new Service.Switch(this.name2);
-        this.log("Created Accessory", this.name1);
-        this.log("Created Accessory", this.name2);
+        this.relayService = new this.Service(this.Service.Switch);
+        //this.relayService2 = new Service.Switch(this.name2);
+        this.log("Created Accessory", this.name);
+        //this.log("Created Accessory", this.name2);
         //callback();
-    };
+      };
 
+      configureAccessory(accessory) {
+        this.accessories.push(accessory);
+      }
+      
     identify(callback) {
         this.log("Accessory identified");
         callback(null);
@@ -99,12 +120,12 @@ class Relayi2cAccessory {
         //rpio.write(this.pin, this.gpioValue(value));
         var cb = null;
         if (value != 0) {
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0xFF,cb);
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0xFF,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0xFF,cb);
+          //this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0xFF,cb);
           this.cache.state = 1;
         } else {
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0x00,cb);
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
+          //this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
           this.cache.state = 0;
         }
         /* turn off the relay if timeout is expired */
@@ -113,17 +134,19 @@ class Relayi2cAccessory {
                 this.log("Pin %d timed out. Turned off", this.pin);
                 this.cache.state = 0;
                 //rpio.write(this.pin, this.gpioValue(false));
-                this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0x00,cb);
-                this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
+                this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
+                //this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
                 this.timerId = -1;
 
                 /* update relay status */
-                this.relayService1
+                this.relayService
                     .getCharacteristic(Characteristic.On)
                     .updateValue(false);
+                    /*
                 this.relayService2
                     .getCharacteristic(Characteristic.On)
                     .updateValue(false);
+                    */
             }, this.timeout);
         }
     };
@@ -137,7 +160,7 @@ class Relayi2cAccessory {
             .setCharacteristic(Characteristic.Model, 'I2C Multi-Relay Controller');
 
         /* relay control */
-        this.relayService1
+        this.relayService
             .getCharacteristic(Characteristic.On)
             .on('get', callback => {
                 this.state = this.getRelayState();
@@ -148,6 +171,7 @@ class Relayi2cAccessory {
                 this.setRelayState(value);
                 callback(null);
             });
+            /*
             this.relayService2
                 .getCharacteristic(Characteristic.On)
                 .on('get', callback => {
@@ -159,7 +183,8 @@ class Relayi2cAccessory {
                     this.setRelayState(value);
                     callback(null);
                 });
-
-        return [this.informationService, this.relayService1, this.relayService2];
+*/
+        //return [this.informationService, this.relayService1, this.relayService2];
+        return [this.informationService, this.relayService];
+      };
     };
-};
