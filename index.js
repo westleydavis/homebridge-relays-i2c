@@ -14,7 +14,9 @@ const I2C = require('raspi-i2c').I2C;
 
 
 module.exports = (api) => {
-  api.registerPlatform('homebridge-relays-i2c', Relayi2cAccessory)
+  api.registerPlatform('homebridge-relays-i2c', Relayi2cAccessory);
+  Service = api.hap.Service;
+  Characteristic = api.hap.Characteristic;
 }
 
 /* module.exports = function(homebridge) {
@@ -79,17 +81,17 @@ class Relayi2cAccessory {
         });
 
         /* run service */
-        this.relayService = new this.Service(this.Service.Switch);
+        this.relayService = new Service.Switch(this.name);
         //this.relayService2 = new Service.Switch(this.name2);
         this.log("Created Accessory", this.name);
         //this.log("Created Accessory", this.name2);
         //callback();
-      };
+      }
 
       configureAccessory(accessory) {
         this.accessories.push(accessory);
       }
-      
+
     identify(callback) {
         this.log("Accessory identified");
         callback(null);
