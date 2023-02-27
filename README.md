@@ -30,7 +30,7 @@ The raspberry pi can then control the state of the relays.
   "description": "4 Channel i2c Relay",
   "accessories": [
     {
-      "accessory": "Relay",
+      "accessory": "i2cRelay",
       "name": "North",
       "i2cAddress": "0x10",
       "i2cRegister": "0x01",
@@ -39,7 +39,7 @@ The raspberry pi can then control the state of the relays.
       "timeout_ms": 5000
     },
     {
-      "accessory": "Relay",
+      "accessory": "i2cRelay",
       "name": "South",
       "address": "0x02",
       "invert": false,
@@ -47,14 +47,14 @@ The raspberry pi can then control the state of the relays.
       "timeout_ms": -1
     },
     {
-      "accessory": "Relay",
+      "accessory": "i2cRelay",
       "name": "Kitchen",
       "address": "0x03"
     },
     {
-      "accessory": "Relay",
+      "accessory": "i2cRelay",
       "name": "Garage Door",
-      "address": "0x024
+      "address": "0x24"
     }
   ],
   "platforms": []

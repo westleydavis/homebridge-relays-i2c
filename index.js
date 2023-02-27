@@ -27,25 +27,20 @@ class Relayi2cAccessory {
     //function Relayi2cAccessory(log,config,api){
         /* log instance */
         this.log = log;
-        this.log = log;
         this.config = config;
         //this.homebridge = api;
         /* read configuration */
 
-
-        this.name1 = config.name;
-        this.name2 = config.name2;
-
         //this.pin = config.pin;
+        this.name = config.name;
 
         this.log.debug(config.i2cAddress);
         this.i2cAddress = parseInt(config.i2cAddress);
-        this.i2cRegister1 = parseInt(config.i2cRegister1);
-        this.i2cRegister2 = parseInt(config.i2cRegister2);
+        this.i2cRegister = parseInt(config.i2cRegister);
         this.i2cDevice = config.i2cDevice || '/dev/i2c-1';
         this.invert = config.invert || false;
         this.initialState = config.initial_state || 0;
-        this.timeout = config.timeout_s*1000 || 0;
+        this.timeout = config.timeout_ms || 0;
 
         /* initialize variables */
         this.timerId = -1;
@@ -62,10 +57,8 @@ class Relayi2cAccessory {
         });
 
         /* run service */
-        this.relayService1 = new Service.Switch(this.name1);
-        this.relayService2 = new Service.Switch(this.name2);
-        this.log("Created Accessory", this.name1);
-        this.log("Created Accessory", this.name2);
+        this.relayService = new Service.Switch(this.name);
+        this.log("Created Accessory", this.name);
         //callback();
     };
 
@@ -95,33 +88,27 @@ class Relayi2cAccessory {
         }
 
         /* GPIO write operation */
-        this.log.debug("Adress %d status: %s", this.i2cAddress, value);
+        this.log.debug("Address %d status: %s", this.i2cAddress, value);
         //rpio.write(this.pin, this.gpioValue(value));
         var cb = null;
         if (value != 0) {
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0xFF,cb);
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0xFF,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0xFF,cb);
           this.cache.state = 1;
         } else {
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0x00,cb);
-          this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
+          this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
           this.cache.state = 0;
         }
         /* turn off the relay if timeout is expired */
         if (value && this.timeout > 0) {
             this.timerId = setTimeout(() => {
-                this.log("Pin %d timed out. Turned off", this.pin);
+                this.log("Relay %d timed out. Turned off", this.i2cRegister);
                 this.cache.state = 0;
                 //rpio.write(this.pin, this.gpioValue(false));
-                this.wire.writeByte(this.i2cAddress,this.i2cRegister1,0x00,cb);
-                this.wire.writeByte(this.i2cAddress,this.i2cRegister2,0x00,cb);
+                this.wire.writeByte(this.i2cAddress,this.i2cRegister,0x00,cb);
                 this.timerId = -1;
 
                 /* update relay status */
-                this.relayService1
-                    .getCharacteristic(Characteristic.On)
-                    .updateValue(false);
-                this.relayService2
+                this.relayService
                     .getCharacteristic(Characteristic.On)
                     .updateValue(false);
             }, this.timeout);
@@ -137,7 +124,7 @@ class Relayi2cAccessory {
             .setCharacteristic(Characteristic.Model, 'I2C Multi-Relay Controller');
 
         /* relay control */
-        this.relayService1
+        this.relayService
             .getCharacteristic(Characteristic.On)
             .on('get', callback => {
                 this.state = this.getRelayState();
@@ -148,18 +135,7 @@ class Relayi2cAccessory {
                 this.setRelayState(value);
                 callback(null);
             });
-            this.relayService2
-                .getCharacteristic(Characteristic.On)
-                .on('get', callback => {
-                    this.state = this.getRelayState();
-                    this.log.debug("Status:", this.state ? "ON" : "OFF");
-                    callback(null, this.state);
-                })
-                .on('set', (value, callback) => {
-                    this.setRelayState(value);
-                    callback(null);
-                });
 
-        return [this.informationService, this.relayService1, this.relayService2];
+        return [this.informationService, this.relayService];
     };
 };
